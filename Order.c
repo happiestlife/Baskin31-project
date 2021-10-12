@@ -1,18 +1,5 @@
 #include<stdio.h>
-#define MAX 20
-
-typedef struct Order {
-	struct MList* head;
-	int candle_num;
-	int spoon_num;
-}Order;
-
-typedef struct MList {
-	char menu_name[MAX];
-	char icecream[6][MAX];
-	int num;
-	struct MList* link;
-}MList;
+#define MAX 30
 
 typedef struct IcecreamNode {
 	int ic_num; // 번호
@@ -38,12 +25,36 @@ typedef struct HandPackNode {
 	struct HandPackNode* link;
 }HandPackNode;
 
+typedef struct BeverageNode {
+	int bv_num;
+	char bvtype[MAX];
+	int bvserving;
+	int kcal;
+	int bvprice;
+	int prefer;
+	struct BeverageNode* link;
+}BeverageNode;
+
+
 typedef struct InfoHead {
 	IcecreamNode* icecream_link;
 	IcecreamConeNode* icecreamcone_link;
 	HandPackNode* handpack_link;
+	BeverageNode* beverage_link;
 	//아이스크림 케이크, 커피, 음료수 파일열어 연결리스트를 만들면 그 head를 가르킨다.
 }InfoHead;
+
+typedef struct Order {			// 주문 리스트
+	struct MList* head;
+	int spoon_num;
+}Order;
+
+typedef struct MList {			// 각각의 주문들(노드당 한개의 주문)
+	char menu_name[MAX];
+	char icecream[6][MAX];
+	int num;
+	struct MList* link;
+}MList;
 
 void Ordering(InfoHead* info_head);
 void MemoryError(char* message);
@@ -53,17 +64,16 @@ void MenuList(Order** porder, InfoHead* info_head, int type);
 void store(Order** order, MList* node);
 void IcecreamType(Order** porder, IcecreamNode* Icecream_info);
 void IcecreamList(IcecreamNode* Icecream_info);
-void IcecreamCakeList();
-void BeverageList();
-void CoffeeList();
+void BeverageList(BeverageNode* beverage_head);
 void select_ConandCup(Order** porder, IcecreamNode* Icecream_info, char* icecreamtype_name, int num);
 void select_Handpack(Order** porder, IcecreamNode* Icecream_info, char* icecreamtype_name, int num);
-void select_else(Order** porder);
+void select_beverage(Order** porder, BeverageNode* beverage_info);
 void show(Order* order);
 void Cal(Order* order);
 IcecreamNode* makeNode();
 void print_ic(IcecreamNode* head);
 InfoHead* loadTxt();
+void print_bv(BeverageNode* head);
 
 void Ordering(InfoHead* info_head) {
 	Order* order = (Order*)malloc(sizeof(Order));
@@ -81,10 +91,6 @@ void Ordering(InfoHead* info_head) {
 			if (order->spoon_num == -1) {
 				printf("원하는 숟가락 개수를 입력하세요.\n");
 				order->spoon_num = input();
-				if (order->candle_num == -1) {
-					printf("원하는 초의 수를 입력하세요.\n");
-					order->candle_num = input();
-				}
 			}
 			break;
 		}
@@ -112,7 +118,6 @@ void MemoryError(char* message) {
 }
 
 void init_Order(Order* order) {
-	order->candle_num = 0;
 	order->spoon_num = 0;
 	order->head = NULL;
 }
@@ -122,13 +127,11 @@ int Show_MenuType() {
 	for (int type = 0; ;) {
 		printf("***********************\n");
 		printf("    1. IceCream\n");
-		printf("    2. IceCreamCake\n");
-		printf("    3. Beverage\n");
-		printf("    4. Coffee\n");
+		printf("    2. Beverage\n");
 		printf("***********************\n");
 		scanf_s("%d", &type);
-		if (type < 1 || type>4) {
-			printf("1~4번 항목사이에서 골라주세요.\n");
+		if (type < 1 || type>2) {
+			printf("1~2번 항목사이에서 골라주세요.\n");
 			continue;
 		}
 		return type;
@@ -142,19 +145,9 @@ void MenuList(Order** porder, InfoHead* info_head, int type) {
 		IcecreamType(porder, info_head->icecream_link);
 		break;
 	case 2:
-		IcecreamCakeList();
-		select_else(porder);
-		break;
-	case 3:
-		BeverageList();
-		select_else(porder);
-		break;
-	case 4:
-		CoffeeList();
-		select_else(porder);
+		select_beverage(porder, info_head->beverage_link);
 		break;
 	}
-	return;
 }
 
 void store(Order** order, MList* node) {
@@ -176,8 +169,10 @@ void show(Order* order) {
 			for (int j = 0; j < i->num; j++)
 				printf("%d. %s\n", j + 1, i->icecream[j]);
 		}
+		else if (strcmp(i->icecream[0], "no") == 0)
+			printf("* 메뉴 : %s, 수량 : 1개\n", i->menu_name);
 		else
-			printf("메뉴 : %s, 아이스크림 종류 : %s, 수량 : %d개\n", i->menu_name, i->icecream[0], i->num);
+			printf("* 메뉴 : %s, 아이스크림 종류 : %s, 수량 : %d개\n", i->menu_name, i->icecream[0], i->num);
 	}
 	printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
 }
@@ -267,27 +262,26 @@ void IcecreamList(IcecreamNode* Icecream_info) {
 	print_ic(Icecream_info);
 }
 
-void IcecreamCakeList() {
-	printf("원하는 메뉴를 선택하세요.\n");
-	//아이스크림 케이크 리스트 나열
+void BeverageList(BeverageNode* beverage_head) {
+	printf("-----------------------------\n");
+	print_bv(beverage_head);
 }
 
-void BeverageList() {
-	printf("원하는 메뉴를 선택하세요.\n");
-	//음료수 리스트 나열
-}
-
-void CoffeeList() {
-	printf("원하는 메뉴를 선택하세요.\n");
-	//커피 리스트 나열
-}
-char* search(IcecreamNode* Icecream_info, int menu_num) {
+char* search_ic(IcecreamNode* Icecream_info, int menu_num) {
 	for (IcecreamNode* i = Icecream_info; i != NULL; i = i->link) {
 		if (i->ic_num == menu_num)
 			return i->name;
 	}
 	return NULL;
 }
+char* search_bv(BeverageNode* beverage_info, int menu_num) {
+	for (BeverageNode* i = beverage_info; i != NULL; i = i->link) {
+		if (i->bv_num == menu_num)
+			return i->bvtype;
+	}
+	return NULL;
+}
+
 void select_ConandCup(Order** porder, IcecreamNode* Icecream_info, char* icecreamtype_name, int num) {
 	int icecream_num = 0;
 	char* name;
@@ -304,7 +298,7 @@ void select_ConandCup(Order** porder, IcecreamNode* Icecream_info, char* icecrea
 		while (1) {
 			printf("=> ");
 			scanf_s("%d", &icecream_num);
-			name = search(Icecream_info, icecream_num);
+			name = search_ic(Icecream_info, icecream_num);
 			if (icecream_num < 0 || !name) {
 				printf("리스트 안에서 주문해주세요.");
 				continue;
@@ -332,7 +326,7 @@ void select_Handpack(Order** porder, IcecreamNode* Icecream_info, char* icecream
 		while (1) {
 			printf("=> ");
 			scanf_s("%d", &icecream_num);
-			name = search(Icecream_info, icecream_num);
+			name = search_ic(Icecream_info, icecream_num);
 			if (icecream_num < 0 || !name) {
 				printf("리스트 안에서 주문해주세요.");
 				continue;
@@ -345,8 +339,9 @@ void select_Handpack(Order** porder, IcecreamNode* Icecream_info, char* icecream
 	store(porder, node);
 }
 
-void select_else(Order** porder) {
+void select_beverage(Order** porder, BeverageNode* beverage_info) {
 	int num;
+	int beverage_num;
 	char* name = NULL;
 	MList* node = (MList*)malloc(sizeof(MList));		// 주문들을 연결리스트(스택)로 저장하기
 	if (!node)
@@ -356,10 +351,30 @@ void select_else(Order** porder) {
 	printf("원하는 개수를 입력하십시오.\n");
 	num = input();
 
-	strcpy(node->menu_name, name);
-	node->num = num;
+	for (int i = 0; i < num; i++) {
+		MList* node = (MList*)malloc(sizeof(MList));
+		if (!node)
+			MemoryError("memory assignment error");
 
-	store(porder, node);
+		node->num = 1;
+		strcpy(node->icecream[0], "no");
+		printf("원하는 음료 항목의 번호를 입력하세요.\n");
+		BeverageList(beverage_info);
+
+		while (1) {
+			printf("=> ");
+			scanf_s("%d", &beverage_num);
+			name = search_bv(beverage_info, beverage_num);
+			if (beverage_num < 0 || !name) {
+				printf("리스트 안에서 주문해주세요.");
+				continue;
+			}
+			break;
+		}
+		printf("name : %s\n", name);
+		strcpy(node->menu_name, name);
+		store(porder, node);
+	}
 }
 /*
 void Cal(Order* order)
@@ -400,6 +415,7 @@ InfoHead* loadTxt() {
 	IcecreamNode* icecream_head = NULL;
 	IcecreamConeNode* icecreamcone_head = NULL;
 	HandPackNode* handpack_head = NULL;
+	BeverageNode* beverage_head = NULL;
 
 	FILE* fp = fopen("icecream_info.txt", "r");
 	if (!fp)
@@ -423,8 +439,7 @@ InfoHead* loadTxt() {
 	while (!feof(fp1))// 파일 끝까지 읽을 동안 (끝에 도달한 경우 0 반환)
 	{
 		IcecreamConeNode* newnode1 = makeNode();
-		fscanf(fp1, "%d %s %d %d \n", &(newnode1->con_num), newnode1->ctype, &(newnode1->cserving), &(newnode1->cprice));
-		printf("%d %s %d %d\n", newnode1->con_num, newnode1->ctype, newnode1->cserving, newnode1->cprice);
+		fscanf(fp1, "%d %s %d %d\n", &(newnode1->con_num), newnode1->ctype, &(newnode1->cserving), &(newnode1->cprice));
 		if (icecreamcone_head == NULL)
 			icecreamcone_head = newnode1;
 		else {
@@ -434,14 +449,13 @@ InfoHead* loadTxt() {
 	}
 	fclose(fp1);
 
-
 	FILE* fp2 = fopen("HandPack_info.txt", "r");
 	if (!fp2)
 		MemoryError("File open error\n");
 	while (!feof(fp2))// 파일 끝까지 읽을 동안 (끝에 도달한 경우 0 반환)
 	{
 		HandPackNode* newnode = makeNode();
-		fscanf(fp2, "%d %s %d %d \n", &(newnode->hp_num), newnode->htype, &(newnode->hserving), &(newnode->hprice));
+		fscanf(fp2, "%d %s %d %d", &(newnode->hp_num), newnode->htype, &(newnode->hserving), &(newnode->hprice));
 		if (handpack_head == NULL)
 			handpack_head = newnode;
 		else {
@@ -451,15 +465,26 @@ InfoHead* loadTxt() {
 	}
 	fclose(fp2);
 
+	FILE* fp3 = fopen("beverage_info.txt", "r");
+	if (!fp3)
+		MemoryError("File open error\n");
+	while (!feof(fp3))// 파일 끝까지 읽을 동안 (끝에 도달한 경우 0 반환)
+	{
+		BeverageNode* newnode = makeNode();
+		fscanf(fp3, "%d %s %d %d %d %d", &(newnode->bv_num), newnode->bvtype, &(newnode->bvserving), &(newnode->kcal), &(newnode->bvprice), &(newnode->prefer));
+		if (beverage_head == NULL)
+			beverage_head = newnode;
+		else {
+			newnode->link = beverage_head;
+			beverage_head = newnode;
+		}
+	}
+	fclose(fp3);
+
 	info_head->icecream_link = icecream_head;
 	info_head->icecreamcone_link = icecreamcone_head;
 	info_head->handpack_link = handpack_head;
-
-	IcecreamConeNode* curr = info_head->icecreamcone_link;
-	while (curr != NULL) {
-		printf("%d %s %d %d\n", curr->con_num, curr->ctype, curr->cserving, curr->cprice);
-		curr = curr->link;
-	}
+	info_head->beverage_link = beverage_head;
 
 	return info_head;
 }
@@ -472,7 +497,7 @@ void print_ic(IcecreamNode* head) {
 	}
 }
 
-void print_ic2(IcecreamConeNode* head) {
+void print_icCon(IcecreamConeNode* head) {
 	IcecreamConeNode* curr = head;
 	while (curr != NULL) {
 		printf("%d %s %d %d\n", curr->con_num, curr->ctype, curr->cserving, curr->cprice);
@@ -480,10 +505,18 @@ void print_ic2(IcecreamConeNode* head) {
 	}
 }
 
-void print_ic3(HandPackNode* head) {
+void print_icHP(HandPackNode* head) {
 	HandPackNode* curr = head;
 	while (curr != NULL) {
 		printf("%d %s %d %d\n", curr->hp_num, curr->htype, curr->hserving, curr->hprice);
+		curr = curr->link;
+	}
+}
+
+void print_bv(BeverageNode* head) {
+	BeverageNode* curr = head;
+	while (curr != NULL) {
+		printf("%d %s %d %d %d %d\n", curr->bv_num, curr->bvtype, curr->bvserving, curr->kcal, curr->bvprice, curr->prefer);
 		curr = curr->link;
 	}
 }
@@ -498,10 +531,5 @@ IcecreamNode* makeNode() {
 
 int main() {
 	InfoHead* info_head = loadTxt();
-	//print_ic(info_head->icecream_link);
-	printf("\n");
-	//print_ic2(info_head->icecreamcone_link);
-	printf("\n");
-	//print_ic3(info_head->handpack_link);
-	//Ordering(info_head);
+	Ordering(info_head);
 }
