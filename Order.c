@@ -82,6 +82,7 @@ void Cal(Order* order, InfoHead* InfoHead);
 
 void print_ic(IcecreamNode* head);
 InfoHead* loadTxt();
+void saveTxt(InfoHead* info_head);
 void print_bv(BeverageNode* head);
 
 void Ordering(InfoHead* info_head) {
@@ -183,7 +184,7 @@ void show(Order* order) {
 		else
 			printf("* 메뉴 : %s, 아이스크림 종류 : %s, 수량 : %d개\n", i->menu_name, i->icecream[0], i->num);
 	}
-	printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+	printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
 }
 
 void IcecreamType(Order** porder, IcecreamNode* Icecream_info) {
@@ -266,16 +267,6 @@ void IcecreamType(Order** porder, IcecreamNode* Icecream_info) {
 	}
 }
 
-void IcecreamList(IcecreamNode* Icecream_info) {
-	printf("-----------------------------\n");
-	print_ic(Icecream_info);
-}
-
-void BeverageList(BeverageNode* beverage_head) {
-	printf("-----------------------------\n");
-	print_bv(beverage_head);
-}
-
 char* search_ic_with_num(IcecreamNode* Icecream_info, int menu_num) {
 	for (IcecreamNode* i = Icecream_info; i != NULL; i = i->link) {
 		if (i->ic_num == menu_num)
@@ -318,7 +309,7 @@ BeverageNode* search_bv_with_name(BeverageNode* phead) // 이름 검색
 	BeverageNode* p = phead;
 
 	char n[30];
-	printf("** 검색할 아이스크림의 이름을 입력해주세요 **\n");
+	printf("** 검색할 음료의 이름을 입력해주세요 **\n");
 	scanf_s("%s", n, sizeof(n));
 
 	while (p != NULL)
@@ -346,7 +337,7 @@ void select_ConandCup(Order** porder, IcecreamNode* Icecream_info, char* icecrea
 		node->type = 1;
 		strcpy(node->menu_name, icecreamtype_name);
 		printf("원하는 아이스크림 항목의 번호를 입력하세요.\n");
-		IcecreamList(Icecream_info);
+		print_ic(Icecream_info);
 
 		while (1) {
 			printf("=> ");
@@ -375,7 +366,7 @@ void select_Handpack(Order** porder, IcecreamNode* Icecream_info, char* icecream
 	strcpy(node->menu_name, icecreamtype_name);
 
 	for (int i = 0; i < num;) {
-		IcecreamList(Icecream_info);
+		print_ic(Icecream_info);
 		printf("%d개의 맛을 선택하세요.\n", num - i);
 		while (1) {
 			printf("=> ");
@@ -410,7 +401,7 @@ void select_beverage(Order** porder, BeverageNode* beverage_info) {
 		node->type = 3;
 		strcpy(node->icecream[0], "no");
 		printf("원하는 음료 항목의 번호를 입력하세요.\n");
-		BeverageList(beverage_info);
+		print_bv(beverage_info);
 
 		while (1) {
 			printf("=> ");
@@ -564,8 +555,8 @@ IcecreamNode* add_icecream_menu(IcecreamNode** phead)
 	IcecreamNode* front = *phead;
 	IcecreamNode* rear = *phead;
 
-	printf("** 추가할 아이스크림의 번호, 제품명, 열량, 제품선호도값을 입력해주세요 **\n");
-	fscanf(stdin, "%d %s %d %d", &(p->ic_num), (p->name), &(p->kcal), &(p->prefer));
+	printf("** 추가할 아이스크림의 제품명, 열량, 제품선호도값을 입력해주세요 **\n");
+	fscanf(stdin, "%s %d %d", (p->name), &(p->kcal), &(p->prefer));
 
 	while (rear != NULL)
 	{
@@ -576,6 +567,7 @@ IcecreamNode* add_icecream_menu(IcecreamNode** phead)
 		{
 			pre->link = p;
 			p->link = NULL;
+			p->ic_num = pre->ic_num + 1;
 		}
 	}
 	return front;
@@ -590,8 +582,8 @@ BeverageNode* add_bv_menu(BeverageNode** phead)
 	BeverageNode* front = *phead;
 	BeverageNode* rear = *phead;
 
-	printf("** enter the new Beverage's Number, name, kcal, prefer **\n");
-	fscanf(stdin, "%d %s %d %d %d %d", &(p->bv_num), (p->bvtype), &(p->bvserving), &(p->kcal), &(p->bvprice), &(p->prefer));
+	printf("** 추가할 음료수의 제품명, 제공량, 열량, 가격, 제품선호도값을 입력해주세요 **\n");
+	fscanf(stdin, "%s %d %d %d %d", (p->bvtype), &(p->bvserving), &(p->kcal), &(p->bvprice), &(p->prefer));
 	while (rear != NULL)
 	{
 		pre = rear;
@@ -601,6 +593,7 @@ BeverageNode* add_bv_menu(BeverageNode** phead)
 		{
 			pre->link = p;
 			p->link = NULL;
+			p->bv_num = pre->bv_num + 1;
 		}
 	}
 
@@ -673,7 +666,7 @@ BeverageNode* makeNode_bv() {
 void print_ic(IcecreamNode* head) {
 	IcecreamNode* curr = head;
 	while (curr != NULL) {
-		printf("%d %s %d %d\n", curr->ic_num, curr->name, curr->kcal, curr->prefer);
+		printf("%d번 %s %dkcal %d회\n", curr->ic_num, curr->name, curr->kcal, curr->prefer);
 		curr = curr->link;
 	}
 }
@@ -685,26 +678,10 @@ void printIcInfo(IcecreamNode* head) // 노드 하나만 출력
 	printf("\n");
 }
 
-void print_icCon(IcecreamConeNode* head) {
-	IcecreamConeNode* curr = head;
-	while (curr != NULL) {
-		printf("%d %s %d %d\n", curr->con_num, curr->ctype, curr->cserving, curr->cprice);
-		curr = curr->link;
-	}
-}
-
-void print_icHP(HandPackNode* head) {
-	HandPackNode* curr = head;
-	while (curr != NULL) {
-		printf("%d %s %d %d\n", curr->hp_num, curr->htype, curr->hserving, curr->hprice);
-		curr = curr->link;
-	}
-}
-
 void print_bv(BeverageNode* head) {
 	BeverageNode* curr = head;
 	while (curr != NULL) {
-		printf("%d %s %d %d %d %d\n", curr->bv_num, curr->bvtype, curr->bvserving, curr->kcal, curr->bvprice, curr->prefer);
+		printf("%d번 %s %dg %dkcal %d원 %d번\n", curr->bv_num, curr->bvtype, curr->bvserving, curr->kcal, curr->bvprice, curr->prefer);
 		curr = curr->link;
 	}
 }
@@ -762,6 +739,8 @@ void Cal(Order* order, InfoHead* InfoHead)
 		if (change >= 0) {
 			printf("거스름돈은 %d 원입니다. 베스킨라빈스를 이용해주셔서 감사합니다!\n", change);
 			printf("---------------------------------------------------------------\n");
+			saveTxt(InfoHead);
+			free(order);
 			exit(1);
 		}
 		else {
@@ -791,27 +770,11 @@ int getYesorNo() // Y 또는 N의 값을 입력받는 함수
 	return -1;
 }
 
-void bv_saveTxt(BeverageNode* bv) {
-	BeverageNode* tmp = NULL;
-
-	FILE* fp;
-	if (fopen_s(&fp, "Beverage_tmp.txt", "w") != NULL) {
-		printf("It is not exist\n");
-		exit(1);
-	}
-	else {
-		while (bv != NULL) {
-			fprintf(fp, "%d %s %d %d %d %d\n", bv->bv_num, bv->bvtype, bv->bvserving, bv->kcal, bv->bvprice, bv->prefer);
-			tmp = bv;
-			bv = bv->link;
-			free(tmp);
-		}
-	}
-	fclose(fp);
-}
-
-void ic_saveTxt(IcecreamNode* ic) {
-	IcecreamNode* tmp = NULL;
+void saveTxt(InfoHead* info_head) {
+	IcecreamNode* ic = info_head->icecream_link;
+	BeverageNode* bv = info_head->beverage_link;
+	IcecreamNode* ic_tmp = NULL;
+	BeverageNode* bv_tmp = NULL;
 
 	FILE* fp;
 	if (fopen_s(&fp, "Icecream_tmp.txt", "w") != NULL) {
@@ -821,29 +784,44 @@ void ic_saveTxt(IcecreamNode* ic) {
 	else {
 		while (ic != NULL) {
 			fprintf(fp, "%d %s %d %d\n", ic->ic_num, ic->name, ic->kcal, ic->prefer);
-			tmp = ic;
+			ic_tmp = ic;
 			ic = ic->link;
-			free(tmp);
+			free(ic_tmp);
 		}
 	}
 	fclose(fp);
+
+	FILE* fp1;
+	if (fopen_s(&fp1, "Beverage_tmp.txt", "w") != NULL) {
+		printf("It is not exist\n");
+		exit(1);
+	}
+	else {
+		while (bv != NULL) {
+			fprintf(fp1, "%d %s %d %d %d %d\n", bv->bv_num, bv->bvtype, bv->bvserving, bv->kcal, bv->bvprice, bv->prefer);
+			bv_tmp = bv;
+			bv = bv->link;
+			free(bv_tmp);
+		}
+	}
+	fclose(fp1);
+
 }
 
 int main(void)
 {
-	IcecreamNode* getInfoIc;
-	BeverageNode* getInfoBv;
-	IcecreamNode* editIc;
+	IcecreamNode* getInfoIc = NULL;
+	BeverageNode* getInfoBv = NULL;
+	IcecreamNode* editIc = NULL;
 	int input;
 
 	InfoHead* info_head = loadTxt();
-
+	printf("===========================================\n");
+	printf("** ^^어서오세요 배스킨라빈스 31입니다^^ **\n");
+	printf("===========================================\n");
+	printf("\n");
 	do
 	{
-		printf("===========================================\n");
-		printf("** ^^어서오세요 배스킨라빈스 31입니다^^ **\n");
-		printf("===========================================\n");
-		printf("\n");
 		printf("\n원하시는 번호를 눌러 선택해주세요\n");
 		printf("\n");
 		printf("0. 종료하기\n");
@@ -868,6 +846,7 @@ int main(void)
 		{
 		case 0:
 			printf("감사합니다^^ 종료하겠습니다\n");
+			saveTxt(info_head);
 			break;
 
 		case 1:
